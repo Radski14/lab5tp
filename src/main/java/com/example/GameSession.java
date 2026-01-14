@@ -98,9 +98,7 @@ public class GameSession {
         }
 
         // ===== PASS =====
-//        if (move.pass) {
-        if (move.x == 8) {
-
+        if (move.pass) {
             consecutivePasses++;
 
             if (consecutivePasses >= 2) {
