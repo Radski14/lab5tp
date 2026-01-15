@@ -39,4 +39,32 @@ public class Board {
         }
         return sb.toString();
     }
+
+    public int getSize() {
+        return size;
+    }
+
+
+    public Board copy() {
+        Board b = new Board(size);
+        for (int x = 0; x < size; x++)
+            for (int y = 0; y < size; y++)
+                b.grid[x][y] = this.grid[x][y];
+        return b;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Board)) return false;
+        Board other = (Board) o;
+        if (this.size != other.size) return false;
+
+        for (int x = 0; x < size; x++)
+            for (int y = 0; y < size; y++)
+                if (this.grid[x][y] != other.grid[x][y])
+                    return false;
+
+        return true;
+    }
+
 }
