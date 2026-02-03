@@ -15,10 +15,10 @@ public class GameSession {
     private final RulesEngine rules = new RulesEngine();
 
     /** Klient grający czarnymi kamieniami. */
-    private ClientHandler black;
+    private Player black;
 
     /** Klient grający białymi kamieniami. */
-    private ClientHandler white;
+    private Player white;
 
     /** Kamień gracza, którego jest aktualnie tura. */
     private Stone currentTurn = Stone.BLACK;
@@ -59,6 +59,12 @@ public class GameSession {
         white = new ClientHandler(p2, Stone.WHITE, this);
     }
 
+    /** Konstruktor dla Gry: Człowiek vs BOT */
+    public GameSession(Socket p1) throws Exception {
+        this.black = new ClientHandler(p1, Stone.BLACK, this);
+        this.white = new Bot(Stone.WHITE, this);
+    }
+
     /** Uruchamia grę i rozpoczyna wątki klientów. */
     public void start() {
         black.start();
@@ -72,11 +78,16 @@ public class GameSession {
      * @param move   Wykonany ruch.
      * @param sender Gracz wykonujący ruch.
      */
-    public synchronized void handleMove(Move move, ClientHandler sender) {
+    public synchronized void handleMove(Move move, Player sender) {
         if (gameOver) return;
 
         if (scoringPhase) {
             handleScoringMove(move, sender);
+            return;
+        }
+
+        if (move.resign) {
+            endGameByResignation(sender);
             return;
         }
 
@@ -85,10 +96,6 @@ public class GameSession {
             return;
         }
 
-        if (move.resign) {
-            endGameByResignation(sender);
-            return;
-        }
 
         if (move.pass) {
             consecutivePasses++;
@@ -129,7 +136,7 @@ public class GameSession {
      * @param move   Ruch punktacyjny.
      * @param sender Gracz wykonujący akcję.
      */
-    private void handleScoringMove(Move move, ClientHandler sender) {
+    private void handleScoringMove(Move move, Player sender) {
 
         if (move.doneScoring) {
             if (sender.getStone() == Stone.BLACK) blackDone = true;
@@ -186,9 +193,9 @@ public class GameSession {
      * @param msgSelf       Komunikat dla niego.
      * @param msgOther      Komunikat dla przeciwnika.
      */
-    private void switchTurn(ClientHandler currentSender, String msgSelf, String msgOther) {
+    private void switchTurn(Player currentSender, String msgSelf, String msgOther) {
         currentTurn = currentTurn.opposite();
-        ClientHandler other = (currentSender.getStone() == Stone.BLACK) ? white : black;
+        Player other = (currentSender.getStone() == Stone.BLACK) ? white : black;
 
         currentSender.sendState(new GameState(board.toString(), msgSelf, false));
         other.sendState(new GameState(board.toString(), msgOther, true));
@@ -199,9 +206,9 @@ public class GameSession {
      *
      * @param loser Gracz, który się poddał.
      */
-    private void endGameByResignation(ClientHandler loser) {
+    private void endGameByResignation(Player loser) {
         gameOver = true;
-        ClientHandler winner = (loser.getStone() == Stone.BLACK) ? white : black;
+        Player winner = (loser.getStone() == Stone.BLACK) ? white : black;
         loser.sendState(new GameState(board.toString(), "You resigned. You lose.", false));
         winner.sendState(new GameState(board.toString(), "Opponent resigned. You win.", false));
     }
@@ -236,4 +243,19 @@ public class GameSession {
     public void setPreviousBoard(Board b) {
         previousBoard = b;
     }
+
+    /**
+     * Tworzy lekką kopię sesji wyłącznie do symulacji ruchów (BOT).
+     * Nie zawiera graczy ani komunikacji.
+     */
+    public GameSession copyForSimulation() {
+        GameSession sim = new GameSession();
+
+        sim.previousBoard =
+                this.previousBoard == null ? null : this.previousBoard.copy();
+
+        return sim;
+    }
+
+    private GameSession() {}
 }

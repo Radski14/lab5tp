@@ -7,7 +7,7 @@ import java.net.Socket;
  * Obsługuje połączenie sieciowe z pojedynczym klientem (graczem) w osobnym wątku.
  * Klasa odpowiada za odbieranie ruchów od klienta oraz przesyłanie mu aktualnego stanu gry.
  */
-public class ClientHandler extends Thread {
+public class ClientHandler extends Thread implements Player {
     /** Strumień wejściowy do odbierania obiektów od klienta. */
     private final ObjectInputStream in;
     /** Strumień wyjściowy do wysyłania obiektów do klienta. */
@@ -52,6 +52,7 @@ public class ClientHandler extends Thread {
         try {
             out.writeObject(state);
             out.flush();
+            out.reset();
         } catch (IOException e) {
             System.out.println("Client disconnected: " + stone);
         }

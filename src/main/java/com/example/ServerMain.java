@@ -1,6 +1,7 @@
 package com.example;
 
 import java.net.*;
+import java.util.Scanner;
 
 /**
  * Główna klasa serwera gry Go.
@@ -11,7 +12,6 @@ public class ServerMain {
 
     /** Domyślny numer portu, na którym serwer nasłuchuje połączeń. */
     private static final int PORT = 12345;
-
     /**
      * Punkt wejścia aplikacji serwerowej.
      * Metoda wykonuje następujące kroki:
@@ -28,12 +28,19 @@ public class ServerMain {
 
             Socket p1 = serverSocket.accept();
             System.out.println("Player 1 connected from: " + p1.getInetAddress());
-
-            Socket p2 = serverSocket.accept();
-            System.out.println("Player 2 connected from: " + p2.getInetAddress());
-
-            GameSession session = new GameSession(p1, p2);
-            session.start();
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("wybierz opcje:");
+            System.out.println("1. bot");
+            String input = scanner.nextLine();
+            if (input.equals("1")) {
+                GameSession session = new GameSession(p1); // Konstruktor z botem
+                session.start();
+            } else {
+                System.out.println("Waiting for Player 2...");
+                Socket p2 = serverSocket.accept();
+                GameSession session = new GameSession(p1, p2);
+                session.start();
+            }
 
         } catch (Exception e) {
             System.err.println("Server error: " + e.getMessage());
